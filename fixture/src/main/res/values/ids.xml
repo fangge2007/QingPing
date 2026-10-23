@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="skip_button" type="id" />
+    <item name="image_close" type="id" />
+    <item name="video_close" type="id" />
+    <item name="stage_one_skip" type="id" />
+    <item name="stage_two_close" type="id" />
+    <item name="dialog_close" type="id" />
+    <item name="business_close" type="id" />
+    <item name="business_skip" type="id" />
+    <item name="business_countdown_skip" type="id" />
+    <item name="business_english_skip" type="id" />
+    <item name="business_fake_skip" type="id" />
+    <item name="business_download_skip" type="id" />
+    <item name="business_dialog_close" type="id" />
+    <item name="compound_control" type="id" />
+    <item name="compound_business_control" type="id" />
+    <item name="aggregate_skip" type="id" />
+    <item name="dangerous_parent" type="id" />
+    <item name="dangerous_parent_skip_leaf" type="id" />
+    <item name="unimportant_skip" type="id" />
+</resources>

@@ -1,0 +1,15 @@
+{
+  "format": "qingping-rules-v1",
+  "rules": [
+    {
+      "key": "fixture-image-close",
+      "name": "测试图标关闭",
+      "packageName": "cn.qingping.fixture",
+      "activity": "cn.qingping.fixture.SplashActivity",
+      "viewId": "cn.qingping.fixture:id/image_close",
+      "description": "关闭广告",
+      "allowGesture": true,
+      "windowSeconds": 15
+    }
+  ]
+}

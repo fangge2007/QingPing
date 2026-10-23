@@ -1,0 +1,12 @@
+.gradle/
+.tools/
+local.properties
+**/build/
+*.jks
+*.keystore
+.idea/
+artifacts/
+hs_err_pid*.log
+replay_pid*.log
+*.log
+release-assets/

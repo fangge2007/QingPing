@@ -1,0 +1,45 @@
+{
+  "checkedOn": "2026-10-22",
+  "repositories": [
+    {
+      "repository": "zjyzip/AdClose",
+      "commit": "11f9e5547ec1e89ad7daf7114d05a0b02aa96de1",
+      "license": "CC BY-NC-SA 4.0",
+      "files": [
+        "app/src/main/java/com/close/hook/ads/hook/common/DisableShakeAd.java",
+        "app/src/main/java/com/close/hook/ads/hook/HookLogic.kt",
+        "app/src/main/java/com/close/hook/ads/hook/LibXposedEntry.kt",
+        "app/src/main/java/com/close/hook/ads/hook/util/HookUtil.java",
+        "LICENSE"
+      ]
+    },
+    {
+      "repository": "pwh-pwh/fuck_shake",
+      "commit": "34a20bad084fbc54ce4a776acbf0809defe8d02b",
+      "license": "MIT",
+      "files": [
+        "app/src/main/java/dev/coderpwh/fuck/hook/HookEntry.kt",
+        "LICENSE"
+      ]
+    },
+    {
+      "repository": "ldy19941102/DisableStartActivityOnSensorChanged",
+      "commit": "a694dd367cb22c04fe83ddca8b82e7796e7dd57f",
+      "license": "No license file found; GitHub license=null",
+      "files": [
+        "app/src/main/java/lin/xposed/hook/item/HookSensorEventListener.java",
+        "app/src/main/java/lin/xposed/hook/HookInit.java"
+      ]
+    },
+    {
+      "repository": "RikkaApps/Shizuku-API",
+      "commit": "a27f6e4151ba7b39965ca47edb2bf0aeed7102e5",
+      "license": "MIT",
+      "files": [
+        "api/src/main/java/rikka/shizuku/ShizukuBinderWrapper.java",
+        "README.md",
+        "LICENSE"
+      ]
+    }
+  ]
+}

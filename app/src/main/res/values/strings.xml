@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">清屏</string>
+    <string name="allow_app_gesture">允许对内置或精确规则控件模拟点击</string>
+    <string name="allow_rule_gesture">允许此规则模拟点击（另需 APP 模拟点击开关）</string>
+    <string name="accessibility_description">仅在您启用的 APP 中读取界面结构，按规则点击广告跳过或指定关闭控件；另行允许后可模拟点击精确控件。对指定来源和目标 APP，在广告跳转后尝试返回。不读取输入框，不截图、不联网。手动诊断只在内存短时保留少量按钮标签与控件信息。不能禁用其他 APP 的摇一摇传感器，无法保证全部广告可处理。可随时暂停或关闭服务。</string>
+</resources>
