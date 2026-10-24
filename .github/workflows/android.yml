@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-test-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +19,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Install compile SDK
-        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Verify preinstalled compile SDK
+        run: |
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/aapt"
       - name: Build and test the app and fixtures
         run: >-
           ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:jacocoServiceCoverageVerification
