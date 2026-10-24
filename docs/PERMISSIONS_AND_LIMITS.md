@@ -100,4 +100,4 @@ Android 12+ 限制 [从后台启动前台服务](https://developer.android.com/d
 
 手动诊断仅保留短时按钮候选；用户主动保存时才将选中按钮的 ID、短标签、描述和 Activity 等持久化为精确规则。持久数据还包括 APP 设置、计数与时间，不包括完整节点树和截图。用户可暂停、撤销同意、关闭系统服务或卸载。
 
-清屏不是以辅助残障人士为主要目的的产品，不应声明 `isAccessibilityTool=true`。需要准确披露访问的数据及用途并取得明确同意，见 [Google Play 无障碍 API 政策](https://support.google.com/googleplay/android-developer/answer/10964491?hl=en)。此外，[设备与网络滥用政策](https://support.google.com/googleplay/android-developer/answer/16559646?hl=en) 明确将阻止或干扰其他 APP 展示广告列为违规示例。这是当前用途的实质分发限制，不能仅靠改名称或无障碍申报解决；本交付以本地安装调试版本为范围，不应承诺 Google Play 上架。
+清屏不是以辅助残障人士为主要目的的产品，不应声明 `isAccessibilityTool=true`。需要准确披露访问的数据及用途并取得明确同意，见 [Google Play 无障碍 API 政策](https://support.google.com/googleplay/android-developer/answer/10964491?hl=en)。此外，[设备与网络滥用政策](https://support.google.com/googleplay/android-developer/answer/16559646?hl=en) 明确将阻止或干扰其他 APP 展示广告列为违规示例。这是当前用途的实质分发限制，不能仅靠改名称或无障碍申报解决；本项目以站外本地安装为分发范围，不应承诺 Google Play 上架。
