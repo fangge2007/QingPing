@@ -2,6 +2,8 @@
 
 验证日期：2026-10-24。历史记录：[0.4.1](VERIFICATION_0.4.1.md)、[0.4.0](VERIFICATION_0.4.0.md)。本页区分主机自动化与真实设备结果。
 
+本页下文是 `v0.4.2` 发布标签的验证快照。后续 `main` 增加回调负例及统一验证工具，测试数量与覆盖率以对应提交生成的 `evidence.json` / Actions Summary 为准，使用方法见[可复现验证](VERIFICATION_TOOLING.md)。真机填写[验收记录模板](DEVICE_ACCEPTANCE_TEMPLATE.md)，不能用新增主机测试追认为该标签已通过真机验收。
+
 ## 已完成的本地检查
 
 - Java 17、Gradle 8.11.1、AGP 8.10.1、compile/target SDK 36、min SDK 26。

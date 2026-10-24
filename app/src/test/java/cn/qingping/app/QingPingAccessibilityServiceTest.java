@@ -173,6 +173,32 @@ public class QingPingAccessibilityServiceTest {
         assertEquals(1, shadow.getGesturesDispatched().size());
     }
 
+    @Test public void cancelledGestureDoesNotCountAndReleasesInFlightState() {
+        AccessibilityNodeInfo node = node(SOURCE, "跳过广告"); shadow.setRootInActiveWindow(node);
+        store.setGestureAllowed(SOURCE, true); shadow.setCanDispatchGestures(true);
+        AdDecisionEngine.Decision decision = decision(); assertTrue(gesture(node, decision));
+        ShadowAccessibilityService.GestureDispatch dispatch = shadow.getGesturesDispatched().get(0);
+        dispatch.callback().onCancelled(dispatch.description());
+        assertFalse((boolean) ReflectionHelpers.getField(service, "gestureInFlight"));
+        AdDecisionEngine engine = ReflectionHelpers.getField(service, "engine");
+        assertFalse(engine.hasPendingAction(SystemClock.elapsedRealtime()));
+        assertEquals(0, store.total(0));
+    }
+
+    @Test public void completionAfterConsentRevocationCannotReviveTheAction() {
+        AccessibilityNodeInfo node = node(SOURCE, "跳过广告"); shadow.setRootInActiveWindow(node);
+        store.setGestureAllowed(SOURCE, true); shadow.setCanDispatchGestures(true);
+        AdDecisionEngine.Decision decision = decision(); assertTrue(gesture(node, decision));
+        ShadowAccessibilityService.GestureDispatch dispatch = shadow.getGesturesDispatched().get(0);
+        store.setConsent(false); settingsDelivered();
+        dispatch.callback().onCompleted(dispatch.description());
+        AdDecisionEngine engine = ReflectionHelpers.getField(service, "engine");
+        assertFalse(engine.hasPendingAction(SystemClock.elapsedRealtime()));
+        assertFalse((boolean) ReflectionHelpers.getField(service, "gestureInFlight"));
+        assertEquals(0, store.total(0));
+        assertArrayEquals(new String[]{service.getPackageName()}, service.getServiceInfo().packageNames);
+    }
+
     @Test public void configuredRecentAdJumpInvokesRealBackBoundary() {
         store.setRule(SOURCE, true, TARGET, ""); settingsDelivered();
         AdDecisionEngine engine = ReflectionHelpers.getField(service, "engine");

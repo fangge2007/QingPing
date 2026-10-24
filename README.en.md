@@ -120,10 +120,14 @@ The core feature requires manually authorized accessibility access. Notification
 
 Toolchain: JDK 17, Gradle 8.11.1, AGP 8.10.1, and Android SDK 36. Downloading build dependencies requires network access; the installed app does not connect to the internet.
 
-```powershell
-.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```bash
+bash scripts/verify.sh
 ```
 
-`scripts/verify.ps1` can use an already prepared portable toolchain to check the test apps as well. `fixture` and `fixturetarget` provide repeatable local scenarios and contain no commercial ad SDK. Main sources are under `app/src/main/java/cn/qingping/app/`.
+```powershell
+.\scripts\verify.ps1
+```
+
+Both shell entry points and CI share the Gradle `verify` task and generate test counts, failures/skips and coverage evidence; see [reproducible verification](docs/VERIFICATION_TOOLING.en.md). `fixture` and `fixturetarget` provide repeatable local scenarios without commercial ad SDKs. Use the [device record template](docs/DEVICE_ACCEPTANCE_TEMPLATE.en.md) for real hardware; unexecuted cases remain unexecuted. Main sources are under `app/src/main/java/cn/qingping/app/`.
 
 Version 0.4.2 adds Android service tests, JaCoCo reporting and GitHub Actions checks. Automated checks are recorded separately from device acceptance. Real-world coverage, power consumption and accidental-action rates have not been measured. See the [verification record, Chinese](docs/VERIFICATION.md) and [release build and migration guide](docs/RELEASE_BUILD.en.md).

@@ -1,0 +1,100 @@
+// Standard JDK XML APIs keep verification independent of Python or extra plugins.
+tasks.register('verifyEvidence') {
+    group = 'verification'
+    dependsOn 'assembleDebug', 'jacocoServiceCoverageVerification', 'lintDebug',
+            'processReleaseManifest', ':fixture:assembleDebug', ':fixture:lintDebug',
+            ':fixturetarget:assembleDebug'
+    doLast {
+        def readXml = { File source ->
+            def factory = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+            factory.setNamespaceAware(true)
+            factory.setFeature('http://xml.org/sax/features/external-general-entities', false)
+            factory.setFeature('http://xml.org/sax/features/external-parameter-entities', false)
+            factory.setFeature('http://apache.org/xml/features/nonvalidating/load-external-dtd', false)
+            factory.setAttribute(javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD, '')
+            factory.setAttribute(javax.xml.XMLConstants.ACCESS_EXTERNAL_SCHEMA, '')
+            factory.newDocumentBuilder().parse(source)
+        }
+        def findElement = { document, String tag, String name ->
+            def rows = document.getElementsByTagName(tag)
+            for (int i = 0; i < rows.length; i++) {
+                if (rows.item(i).getAttribute('name') == name) return rows.item(i)
+            }
+            throw new GradleException("Missing $tag evidence: $name")
+        }
+        def counter = { owner, String type ->
+            def rows = owner.childNodes
+            for (int i = 0; i < rows.length; i++) {
+                def row = rows.item(i)
+                if (row.nodeName == 'counter' && row.getAttribute('type') == type) {
+                    int covered = Integer.parseInt(row.getAttribute('covered'))
+                    int missed = Integer.parseInt(row.getAttribute('missed'))
+                    if (covered + missed == 0) throw new GradleException("Empty $type coverage evidence")
+                    return [covered: covered, missed: missed,
+                            percent: (100.0 * covered / (covered + missed)).round(2)]
+                }
+            }
+            throw new GradleException("Missing $type coverage counter")
+        }
+
+        def junitFiles = fileTree(layout.buildDirectory.dir('test-results/testDebugUnitTest')) {
+            include 'TEST-*.xml'
+        }.files
+        if (junitFiles.empty) throw new GradleException('JUnit reports are missing')
+        def tests = [total: 0, failures: 0, errors: 0, skipped: 0, serviceExecutions: 0]
+        junitFiles.each { source ->
+            def suite = readXml(source).documentElement
+            ['tests': 'total', 'failures': 'failures', 'errors': 'errors', 'skipped': 'skipped'].each { attr, key ->
+                tests[key] += Integer.parseInt(suite.getAttribute(attr))
+            }
+            if (suite.getAttribute('name') == 'cn.qingping.app.QingPingAccessibilityServiceTest') {
+                tests.serviceExecutions += Integer.parseInt(suite.getAttribute('tests')) -
+                        Integer.parseInt(suite.getAttribute('skipped'))
+            }
+        }
+        if (tests.failures || tests.errors || tests.total == tests.skipped || tests.serviceExecutions <= 0)
+            throw new GradleException('Passing logic and Android service evidence is required')
+        tests.passed = tests.total - tests.failures - tests.errors - tests.skipped
+
+        def coverageFile = layout.buildDirectory.file('reports/jacoco/jacocoTestReport/jacocoTestReport.xml').get().asFile
+        def coverage = readXml(coverageFile)
+        def serviceClass = findElement(coverage, 'class', 'cn/qingping/app/QingPingAccessibilityService')
+        def serviceSource = findElement(coverage, 'sourcefile', 'QingPingAccessibilityService.java')
+        def classLines = counter(serviceClass, 'LINE')
+        def classBranches = counter(serviceClass, 'BRANCH')
+        def sourceLines = counter(serviceSource, 'LINE')
+
+        def manifests = fileTree(layout.buildDirectory.dir('intermediates/merged_manifests/release')) {
+            include '**/AndroidManifest.xml'
+        }.files
+        if (manifests.empty) throw new GradleException('Release manifest evidence is missing')
+        manifests.each { source ->
+            def apps = readXml(source).getElementsByTagName('application')
+            if (apps.length != 1 || !(apps.item(0).getAttributeNS(
+                    'http://schemas.android.com/apk/res/android', 'debuggable') in ['', 'false']))
+                throw new GradleException('Release manifest enables debugging or is malformed')
+        }
+
+        def evidence = [schemaVersion: 1, generatedAtUtc: java.time.Instant.now().toString(),
+                sourceCommit: System.getenv('GITHUB_SHA') ?: 'local-working-tree',
+                junit: tests, serviceClassLines: classLines, serviceClassBranches: classBranches,
+                serviceFileLines: sourceLines, releaseManifestDebuggable: false,
+                physicalDeviceAcceptanceEstablished: false]
+        def directory = layout.buildDirectory.dir('reports/verification').get().asFile
+        directory.mkdirs()
+        new File(directory, 'evidence.json').setText(groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(evidence)) + '\n', 'UTF-8')
+        def summary = """# Verification evidence
+
+- Source: `${evidence.sourceCommit}`
+- JUnit: ${tests.passed}/${tests.total} passed; ${tests.failures} failures, ${tests.errors} errors, ${tests.skipped} skipped.
+- Android service test executions: ${tests.serviceExecutions}.
+- Service file line coverage, including inner classes: ${sourceLines.percent}% (${sourceLines.covered}/${sourceLines.covered + sourceLines.missed}).
+- Service class: ${classLines.percent}% lines, ${classBranches.percent}% branches.
+- Release manifest: debugging is not enabled. This is not an APK signing or device run-as check.
+- Physical-device acceptance, real-ad coverage and power use are not established by this job.
+"""
+        new File(directory, 'summary.md').setText(summary, 'UTF-8')
+        logger.lifecycle("Verification evidence: ${new File(directory, 'evidence.json')}")
+    }
+}

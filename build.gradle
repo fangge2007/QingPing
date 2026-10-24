@@ -1,3 +1,9 @@
 plugins {
     id 'com.android.application' version '8.10.1' apply false
 }
+
+tasks.register('verify') {
+    group = 'verification'
+    description = 'Build, test, check coverage and Lint, then produce verification evidence.'
+    dependsOn ':app:verifyEvidence'
+}

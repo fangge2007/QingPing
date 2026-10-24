@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string]$Destination = 'C:\ChatGPT\QingPing-publish',
-    [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')][string]$Version = '0.4.2'
+    [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')][string]$Version = '0.4.2',
+    [switch]$SourceOnly
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -36,6 +37,10 @@ foreach ($ignoreRule in @('*.log', 'release-assets/')) {
     if ($publicIgnoreLines -notcontains $ignoreRule) {
         Add-Content -LiteralPath $publicIgnorePath -Value $ignoreRule
     }
+}
+if ($SourceOnly) {
+    Write-Output ('Public source: ' + $destinationPath)
+    return
 }
 $assets = Join-Path $destinationPath ('release-assets\' + $Version)
 New-Item -ItemType Directory -Force -Path $assets | Out-Null

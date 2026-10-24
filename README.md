@@ -117,10 +117,14 @@
 
 工具链：JDK 17、Gradle 8.11.1、AGP 8.10.1、Android SDK 36。构建依赖下载需要网络，安装后的应用不联网。
 
-```powershell
-.\gradlew.bat :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```bash
+bash scripts/verify.sh
 ```
 
-`scripts/verify.ps1` 可使用已准备的便携工具同时检查测试应用；`fixture` 与 `fixturetarget` 为本地可重复场景，不含商业广告 SDK。主要源码在 `app/src/main/java/cn/qingping/app/`。
+```powershell
+.\scripts\verify.ps1
+```
+
+两种入口和 CI 共用 Gradle `verify` 任务，自动生成测试数量、失败/跳过数和覆盖率证据；见[可复现验证](docs/VERIFICATION_TOOLING.md)。`fixture` 与 `fixturetarget` 为本地可重复场景，不含商业广告 SDK。真机结果请填写[验收记录模板](docs/DEVICE_ACCEPTANCE_TEMPLATE.md)，未执行项不预填通过。主要源码在 `app/src/main/java/cn/qingping/app/`。
 
 0.4.2 增加 Android 服务层测试、JaCoCo 报告及 GitHub Actions 构建检查。自动测试结果与真机验收分开记录；尚未测量真实覆盖率或耗电，亦不承诺零误触。当前验证结果见[验证记录](docs/VERIFICATION.md)。签名、迁移与构建方法见[发布构建说明](docs/RELEASE_BUILD.md)。
