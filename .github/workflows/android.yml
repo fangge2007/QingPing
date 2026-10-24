@@ -19,10 +19,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Verify preinstalled compile SDK
-        run: |
-          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
-          test -x "$ANDROID_HOME/build-tools/35.0.0/aapt"
+      - name: Read shared SDK versions
+        id: sdk
+        run: bash scripts/ci-sdk-config.sh >> "$GITHUB_OUTPUT"
+      - name: Provision the configured Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+        with:
+          cmdline-tools-version: ${{ steps.sdk.outputs.command_line_tools }}
+          packages: platforms;android-${{ steps.sdk.outputs.compile_sdk }} build-tools;${{ steps.sdk.outputs.build_tools }}
+          # Use the hosted runner's existing license grants; do not accept new terms silently.
+          accept-android-sdk-licenses: false
       - name: Build and test the app and fixtures
         run: bash scripts/verify.sh
       - name: Publish verification summary

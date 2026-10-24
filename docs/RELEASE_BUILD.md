@@ -52,3 +52,16 @@ aapt dump badging qingping-0.4.2-release.apk
 GitHub Actions 构建调试应用及测试夹具，运行纯逻辑和 Robolectric Android 服务测试、Lint 并保存 JaCoCo 报告；另核对 release 清单未启用调试。CI 不持有发布私钥，不生成冒充正式身份的签名安装包。
 
 Robolectric 在主机模拟 Android API 与系统调用边界，不能代替真实无障碍授权、OEM 进程管理、真实 App 广告、屏幕手势命中或耗电测试。继续按 [设备测试计划](DEVICE_TEST_PLAN.md) 收集证据。
+
+## 选择发布输出目录
+
+使用 PowerShell 7。输出目录现在必须显式提供，相对路径基于调用时的工作目录解析，不能指向源码目录或其子目录。请选择空目录，或已有的清屏发布副本。
+
+```powershell
+# 从仓库根目录执行，输出到仓库同级目录
+.\scripts\prepare-publication.ps1 -Destination ..\QingPing-publication -SourceOnly
+# 已完成 release 构建后，打包白名单源码和附件
+.\scripts\package.ps1 -Destination ..\QingPing-publication
+```
+
+`-SourceOnly` 同步源码而不重新生成已有版本附件。源码 ZIP 只包含白名单中实际复制的文件；输出目录中的其他文件不进入归档。脚本不会使用维护者机器的固定盘符作为默认值。

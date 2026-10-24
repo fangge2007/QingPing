@@ -1,7 +1,7 @@
 // Standard JDK XML APIs keep verification independent of Python or extra plugins.
 tasks.register('verifyEvidence') {
     group = 'verification'
-    dependsOn 'assembleDebug', 'jacocoServiceCoverageVerification', 'lintDebug',
+    dependsOn 'assembleDebug', 'jacocoCriticalCoverageVerification', 'lintDebug',
             'processReleaseManifest', ':fixture:assembleDebug', ':fixture:lintDebug',
             ':fixturetarget:assembleDebug'
     doLast {
@@ -42,6 +42,7 @@ tasks.register('verifyEvidence') {
         }.files
         if (junitFiles.empty) throw new GradleException('JUnit reports are missing')
         def tests = [total: 0, failures: 0, errors: 0, skipped: 0, serviceExecutions: 0]
+        def activityExecutions = [main: 0, guide: 0]
         junitFiles.each { source ->
             def suite = readXml(source).documentElement
             ['tests': 'total', 'failures': 'failures', 'errors': 'errors', 'skipped': 'skipped'].each { attr, key ->
@@ -51,9 +52,14 @@ tasks.register('verifyEvidence') {
                 tests.serviceExecutions += Integer.parseInt(suite.getAttribute('tests')) -
                         Integer.parseInt(suite.getAttribute('skipped'))
             }
+            ['cn.qingping.app.MainActivityTest': 'main', 'cn.qingping.app.UsageGuideActivityTest': 'guide'].each { name, key ->
+                if (suite.getAttribute('name') == name)
+                    activityExecutions[key] += Integer.parseInt(suite.getAttribute('tests')) - Integer.parseInt(suite.getAttribute('skipped'))
+            }
         }
-        if (tests.failures || tests.errors || tests.total == tests.skipped || tests.serviceExecutions <= 0)
-            throw new GradleException('Passing logic and Android service evidence is required')
+        if (tests.failures || tests.errors || tests.total == tests.skipped || tests.serviceExecutions <= 0
+                || activityExecutions.values().any { it <= 0 })
+            throw new GradleException('Passing logic, service and both Activity suites are required')
         tests.passed = tests.total - tests.failures - tests.errors - tests.skipped
 
         def coverageFile = layout.buildDirectory.file('reports/jacoco/jacocoTestReport/jacocoTestReport.xml').get().asFile
@@ -63,6 +69,11 @@ tasks.register('verifyEvidence') {
         def classLines = counter(serviceClass, 'LINE')
         def classBranches = counter(serviceClass, 'BRANCH')
         def sourceLines = counter(serviceSource, 'LINE')
+        def criticalClasses = [:]
+        project.ext.coverageGates.each { className, gates ->
+            def node = findElement(coverage, 'class', className.replace('.', '/'))
+            criticalClasses[className] = [lines: counter(node, 'LINE'), branches: counter(node, 'BRANCH')]
+        }
 
         def manifests = fileTree(layout.buildDirectory.dir('intermediates/merged_manifests/release')) {
             include '**/AndroidManifest.xml'
@@ -78,6 +89,9 @@ tasks.register('verifyEvidence') {
         def evidence = [schemaVersion: 1, generatedAtUtc: java.time.Instant.now().toString(),
                 sourceCommit: System.getenv('GITHUB_SHA') ?: 'local-working-tree',
                 junit: tests, serviceClassLines: classLines, serviceClassBranches: classBranches,
+                activityExecutions: activityExecutions, criticalClasses: criticalClasses,
+                coverageGates: project.ext.coverageGates,
+                androidSdk: [compileSdk: rootProject.ext.androidCompileSdk, buildToolsVersion: rootProject.ext.androidBuildTools],
                 serviceFileLines: sourceLines, releaseManifestDebuggable: false,
                 physicalDeviceAcceptanceEstablished: false]
         def directory = layout.buildDirectory.dir('reports/verification').get().asFile
@@ -89,8 +103,10 @@ tasks.register('verifyEvidence') {
 - Source: `${evidence.sourceCommit}`
 - JUnit: ${tests.passed}/${tests.total} passed; ${tests.failures} failures, ${tests.errors} errors, ${tests.skipped} skipped.
 - Android service test executions: ${tests.serviceExecutions}.
+- Activity test executions: MainActivity ${activityExecutions.main}, UsageGuideActivity ${activityExecutions.guide}.
 - Service file line coverage, including inner classes: ${sourceLines.percent}% (${sourceLines.covered}/${sourceLines.covered + sourceLines.missed}).
 - Service class: ${classLines.percent}% lines, ${classBranches.percent}% branches.
+${criticalClasses.collect { name, value -> "- `${name}`: ${value.lines.percent}% lines, ${value.branches.percent}% branches." }.join('\n')}
 - Release manifest: debugging is not enabled. This is not an APK signing or device run-as check.
 - Physical-device acceptance, real-ad coverage and power use are not established by this job.
 """

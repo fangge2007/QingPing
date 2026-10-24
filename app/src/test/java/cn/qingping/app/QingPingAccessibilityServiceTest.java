@@ -52,6 +52,7 @@ public class QingPingAccessibilityServiceTest {
         service = controller.get();
         store = new AppStore(service);
         store.preferences().edit().clear().commit();
+        store.clearStats();
         store.setConsent(true); store.setProtectionEnabled(true); store.setAppEnabled(SOURCE, true);
         Shadows.shadowOf(service.getSystemService(PowerManager.class)).setIsInteractive(true);
         Shadows.shadowOf(service.getSystemService(KeyguardManager.class)).setKeyguardLocked(false);

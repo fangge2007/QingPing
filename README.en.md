@@ -12,6 +12,19 @@ The APK's current interface and built-in tutorial are in Chinese. English is pro
 
 [Download releases](https://github.com/fangge2007/QingPing/releases) · [Phone setup guide](docs/PHONE_SETUP_GUIDE.en.md) · [References and licenses](docs/REFERENCES.en.md) · [Verification record, Chinese](docs/VERIFICATION.md)
 
+## Documentation map
+
+| Goal | Entry point |
+| --- | --- |
+| Install, configure a phone and troubleshoot | [Phone setup guide](docs/PHONE_SETUP_GUIDE.en.md) |
+| Permissions, data and background limits | [Permissions and privacy, Chinese](docs/PERMISSIONS_AND_LIMITS.md) |
+| State machine, bounded nodes and code responsibilities | [Implementation notes, Chinese](docs/IMPLEMENTATION_NOTES.md) |
+| Reproduce local/CI checks and evidence | [Verification tooling](docs/VERIFICATION_TOOLING.en.md) |
+| Sign, package and migrate | [Release build guide](docs/RELEASE_BUILD.en.md) |
+| Record physical-device acceptance | [Device template](docs/DEVICE_ACCEPTANCE_TEMPLATE.en.md) |
+| Sources and licensing | [References](docs/REFERENCES.en.md) · [MIT license](LICENSE) |
+| Verify a published version | [Tagged verification snapshot, Chinese](docs/VERIFICATION.md); older research describes its own version |
+
 ## Features
 
 | Feature | Actual behavior |

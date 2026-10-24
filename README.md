@@ -10,6 +10,19 @@
 
 [下载版本](https://github.com/fangge2007/QingPing/releases) · [各品牌完整操作指南](docs/PHONE_SETUP_GUIDE.md) · [参考项目与许可](docs/REFERENCES.md) · [验证记录](docs/VERIFICATION.md)
 
+## 文档地图
+
+| 我想了解 | 入口 |
+| --- | --- |
+| 安装、按品牌设置与排障 | [手机操作指南](docs/PHONE_SETUP_GUIDE.md) |
+| 授权、数据、后台和能力边界 | [权限与隐私](docs/PERMISSIONS_AND_LIMITS.md) |
+| 状态机、节点约束及代码职责 | [实现说明](docs/IMPLEMENTATION_NOTES.md) |
+| 本地/CI 验证与自动报告 | [验证工具](docs/VERIFICATION_TOOLING.md) |
+| 签名、打包及旧版迁移 | [发布构建](docs/RELEASE_BUILD.md) |
+| 设备验收如何记录 | [真机模板](docs/DEVICE_ACCEPTANCE_TEMPLATE.md) |
+| 引用项目及授权 | [来源清单](docs/REFERENCES.md) · [MIT 许可](LICENSE) |
+| 某个已发布版本的验证 | [验证快照](docs/VERIFICATION.md)；旧研究及发布记录只描述对应版本 |
+
 ## 软件功能
 
 | 功能 | 实际行为 |

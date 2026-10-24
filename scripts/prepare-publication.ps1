@@ -1,14 +1,24 @@
 [CmdletBinding()]
 param(
-    [string]$Destination = 'C:\ChatGPT\QingPing-publish',
+    [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$Destination,
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')][string]$Version = '0.4.2',
     [switch]$SourceOnly
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$destinationPath = [IO.Path]::GetFullPath($Destination)
-if ($destinationPath -eq $projectRoot -or $destinationPath.StartsWith($projectRoot + [IO.Path]::DirectorySeparatorChar)) {
+$destinationPath = [IO.Path]::GetFullPath($Destination, (Get-Location).ProviderPath)
+if ($destinationPath -eq $projectRoot -or $destinationPath.StartsWith($projectRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Use a separate directory outside the development project.'
+}
+if (Test-Path -LiteralPath $destinationPath) {
+    if (!(Test-Path -LiteralPath $destinationPath -PathType Container)) { throw 'Destination must be a directory.' }
+    if (@(Get-ChildItem -LiteralPath $destinationPath -Force).Count -gt 0) {
+        $existingApp = Join-Path $destinationPath 'app\build.gradle'
+        if (!(Test-Path -LiteralPath $existingApp) -or
+                [IO.File]::ReadAllText($existingApp) -notmatch "applicationId\s+['`"]cn\.qingping\.app['`"]") {
+            throw 'Choose an empty directory or an existing QingPing publication checkout.'
+        }
+    }
 }
 New-Item -ItemType Directory -Force -Path $destinationPath | Out-Null
 $sourceRoots = @('app\src', 'fixture\src', 'fixturetarget\src', 'gradle', 'docs', 'examples', 'scripts', '.github')
@@ -20,6 +30,7 @@ foreach ($relative in $sourceRoots) {
     Get-ChildItem -LiteralPath (Join-Path $projectRoot $relative) -File -Recurse | ForEach-Object { $files.Add($_) }
 }
 foreach ($relative in $sourceFiles) { $files.Add((Get-Item -LiteralPath (Join-Path $projectRoot $relative) -Force)) }
+$publishedFiles = [Collections.Generic.List[string]]::new()
 foreach ($file in $files) {
     $relative = [IO.Path]::GetRelativePath($projectRoot, $file.FullName)
     # The private handoff is not part of the public project documentation.
@@ -30,6 +41,7 @@ foreach ($file in $files) {
         $publicText = [IO.File]::ReadAllText($file.FullName).Replace('主人', '用户')
         [IO.File]::WriteAllText($target, $publicText, [Text.UTF8Encoding]::new($false))
     } else { Copy-Item -LiteralPath $file.FullName -Destination $target }
+    $publishedFiles.Add($target)
 }
 $publicIgnorePath = Join-Path $destinationPath '.gitignore'
 $publicIgnoreLines = @(Get-Content -LiteralPath $publicIgnorePath)
@@ -56,12 +68,9 @@ $archivePath = Join-Path $assets "qingping-$Version-source.zip"
 $stream = [IO.File]::Open($archivePath, [IO.FileMode]::Create)
 $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
 try {
-    Get-ChildItem -LiteralPath $destinationPath -File -Recurse -Force | Where-Object {
-        $relativePath = [IO.Path]::GetRelativePath($destinationPath, $_.FullName)
-        $relativePath -notmatch '^(release-assets|\.git)(\\|/)'
-    } | Sort-Object FullName | ForEach-Object {
-        $entry = 'QingPing/' + [IO.Path]::GetRelativePath($destinationPath, $_.FullName).Replace('\','/')
-        [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $entry, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
+    $publishedFiles | Sort-Object -Unique | ForEach-Object {
+        $entry = 'QingPing/' + [IO.Path]::GetRelativePath($destinationPath, $_).Replace('\','/')
+        [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_, $entry, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
     }
 } finally { $zip.Dispose(); $stream.Dispose() }
 $hashes = Get-ChildItem -LiteralPath $assets -File | Where-Object Extension -In '.apk','.zip' | Sort-Object Name | ForEach-Object {

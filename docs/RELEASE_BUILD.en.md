@@ -50,3 +50,16 @@ The release certificate fingerprint and final results are recorded in [VERIFICAT
 GitHub Actions builds the debug app and fixtures, runs logic and Robolectric service tests, runs Lint, preserves JaCoCo reports, and checks that the release manifest is not debuggable. CI has no release private key.
 
 Robolectric simulates Android APIs and system call boundaries on a host. It cannot certify actual accessibility authorization, OEM process management, real ads, physical gesture hits or power consumption. Follow the [device test plan, Chinese](DEVICE_TEST_PLAN.md) for those checks.
+
+## Choose a publication directory
+
+Use PowerShell 7. The destination is required, and relative paths are resolved against the caller's working directory. Choose an empty directory or an existing QingPing publication checkout, outside the source tree.
+
+```powershell
+# Run from the repository root; output is a sibling directory
+.\scripts\prepare-publication.ps1 -Destination ..\QingPing-publication -SourceOnly
+# After building release, package allowlisted sources and assets
+.\scripts\package.ps1 -Destination ..\QingPing-publication
+```
+
+`-SourceOnly` synchronizes sources without regenerating existing release assets. Only copied, allowlisted files enter the source ZIP. Unrelated destination files are excluded, and there is no maintainer-specific drive/path default.

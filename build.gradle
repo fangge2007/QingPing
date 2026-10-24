@@ -2,6 +2,11 @@ plugins {
     id 'com.android.application' version '8.10.1' apply false
 }
 
+def sdkVersions = new Properties()
+file('gradle/android-sdk.properties').withInputStream { sdkVersions.load(it) }
+ext.androidCompileSdk = sdkVersions.getProperty('compileSdk').toInteger()
+ext.androidBuildTools = sdkVersions.getProperty('buildToolsVersion')
+
 tasks.register('verify') {
     group = 'verification'
     description = 'Build, test, check coverage and Lint, then produce verification evidence.'

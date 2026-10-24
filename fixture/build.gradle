@@ -4,11 +4,12 @@ plugins {
 
 android {
     namespace 'cn.qingping.fixture'
-    compileSdk 36
+    compileSdk rootProject.ext.androidCompileSdk
+    buildToolsVersion rootProject.ext.androidBuildTools
     defaultConfig {
         applicationId 'cn.qingping.fixture'
         minSdk 26
-        targetSdk 36
+        targetSdk rootProject.ext.androidCompileSdk
         versionCode 1
         versionName '1.0'
     }

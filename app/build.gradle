@@ -5,11 +5,12 @@ plugins {
 
 android {
     namespace 'cn.qingping.app'
-    compileSdk 36
+    compileSdk rootProject.ext.androidCompileSdk
+    buildToolsVersion rootProject.ext.androidBuildTools
     defaultConfig {
         applicationId 'cn.qingping.app'
         minSdk 26
-        targetSdk 36
+        targetSdk rootProject.ext.androidCompileSdk
         versionCode 6
         versionName '0.4.2'
     }
@@ -65,18 +66,33 @@ tasks.register('jacocoTestReport', JacocoReport) {
     })
     reports { xml.required = true; html.required = true }
 }
-tasks.register('jacocoServiceCoverageVerification', JacocoCoverageVerification) {
+ext.coverageGates = [
+    'cn.qingping.app.QingPingAccessibilityService': [line: 0.65, branch: 0.35],
+    'cn.qingping.app.MainActivity': [line: 0.70, branch: 0.50],
+    'cn.qingping.app.UsageGuideActivity': [line: 0.90, branch: 0.85],
+    'cn.qingping.app.engine.AdDecisionEngine': [line: 0.95, branch: 0.75],
+    'cn.qingping.app.engine.AdControlPolicy': [line: 0.95, branch: 0.80],
+    'cn.qingping.app.engine.PackagePolicy': [line: 0.95, branch: 0.95],
+    'cn.qingping.app.rules.ExactRule': [line: 0.90, branch: 0.70]
+]
+tasks.register('jacocoCriticalCoverageVerification', JacocoCoverageVerification) {
     dependsOn 'jacocoTestReport'
     executionData.from(tasks.named('jacocoTestReport').get().executionData)
     classDirectories.from(tasks.named('jacocoTestReport').get().classDirectories)
     violationRules {
-        rule {
-            element = 'CLASS'
-            includes = ['cn.qingping.app.QingPingAccessibilityService']
-            limit { counter = 'LINE'; minimum = 0.60 }
-            limit { counter = 'BRANCH'; minimum = 0.30 }
+        project.ext.coverageGates.each { className, gates ->
+            rule {
+                element = 'CLASS'
+                includes = [className]
+                limit { counter = 'LINE'; minimum = gates.line }
+                limit { counter = 'BRANCH'; minimum = gates.branch }
+            }
         }
     }
+}
+tasks.register('jacocoServiceCoverageVerification') {
+    description = 'Compatibility alias for the shared critical-class coverage gates.'
+    dependsOn 'jacocoCriticalCoverageVerification'
 }
 
 apply from: rootProject.file('scripts/verification-evidence.gradle')

@@ -31,8 +31,28 @@ Windows PowerShell：
 
 CI 直接运行 Bash 入口，将摘要写入 Actions Summary，并将 JSON、JUnit XML、HTML、Lint 和 JaCoCo 报告保存为 `android-check-reports` 附件。测试缺失、服务测试未执行、覆盖率证据缺失或清单检查不成立会失败；脚本/Gradle 的非零退出码会使 CI 失败。
 
-不把“74 项”或“96 项”写死为自动证据。报告按当次结果计算，通过数与跳过数分开；旧发布标签的数字只代表该标签的历史快照。服务主类的行 60%、分支 30% 是回归门槛，不是完备性保证。
+不把“74 项”或“96 项”写死为自动证据。报告按当次结果计算，通过数与跳过数分开；旧发布标签的数字只代表该标签的历史快照。逐类覆盖率门槛见下表，唯一配置在 Gradle 中维护。
 
 ## 真机证据另行记录
 
 Robolectric、静态清单及主机测试均不能证明真实 OEM 行为、手势命中或耗电。机器报告始终将 `physicalDeviceAcceptanceEstablished` 标记为 false。使用[中文真机模板](DEVICE_ACCEPTANCE_TEMPLATE.md)记录实际设备结果；未执行项不能预填通过。APK 签名及 `run-as` 需按[发布构建说明](RELEASE_BUILD.md)单独核验。
+
+## SDK 配置与 UI 门槛
+
+`gradle/android-sdk.properties` 是 compile/target SDK、Build Tools 与 CI 命令行工具版本的统一入口，三个 Android 模块与 CI 共用。CI 固定 SDK 安装 Action 的提交，按配置安装缺失包；不再只检查 runner 是否预装某个 aapt。自动安装使用 runner 已有的 SDK 许可，不静默接受新的许可条款。
+
+Activity 测试操作实际按钮、对话框、搜索框和生命周期，覆盖用途同意、保护总开关、应用选择、规则配置/导入预览、统计确认与教程搜索/展开。它们使用 Robolectric，仍不代表真机触摸、截图外观或 OEM 验收。
+
+覆盖率约束现在保护七个类，唯一配置位于 `app/build.gradle` 的 `coverageGates`：
+
+| 类 | 行下限 | 分支下限 |
+| --- | --- | --- |
+| QingPingAccessibilityService | 65% | 35% |
+| MainActivity | 70% | 50% |
+| UsageGuideActivity | 90% | 85% |
+| AdDecisionEngine | 95% | 75% |
+| AdControlPolicy | 95% | 80% |
+| PackagePolicy | 95% | 95% |
+| ExactRule | 90% | 70% |
+
+`jacocoCriticalCoverageVerification` 执行全部门槛，旧的服务门槛任务名保留为兼容入口。JSON 与 Actions Summary 会列出逐类实测值、门槛、两个 Activity 的测试执行数及 SDK 配置；缺少任一 Activity 测试或关键类证据会失败。门槛仍是回归下限，不把未覆盖代码视为已经验证。
