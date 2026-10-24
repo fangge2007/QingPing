@@ -4,7 +4,9 @@
 
 QingPing is an Android tool that assists with dismissing ads without Root. When an app selected by the user is in the foreground and the screen is unlocked, QingPing identifies accessible ad-skip or dismiss controls exposed by the system, requests rule-based clicks, and observes the resulting page. It supports available dismiss controls in splash screens, in-app pop-ups, and video ads, as well as returning after a configured ad-related app launch.
 
-**0.4.1 · Android 8.0 / API 26 and later · Native Java · Runs locally**
+**0.4.2 · Android 8.0 / API 26 and later · Native Java · Runs locally**
+
+**Migrating from the 0.4.1 debug APK:** the new release uses a different signing certificate and cannot directly update the old debug APK. Read the [export and migration guide](docs/RELEASE_BUILD.en.md) first.
 
 The APK's current interface and built-in tutorial are in Chinese. English is provided for the repository documentation; this is not an English-localized app build.
 
@@ -45,6 +47,9 @@ Implementation entry points: [UI](app/src/main/java/cn/qingping/app/MainActivity
 - An ordinary APK cannot universally disable another app's motion sensors. Some systems offer an orientation permission; adjust it only if it is actually available on the device.
 - The Android API range does not mean every model or app has been validated. Background cleanup, app updates, and window changes may affect results.
 
+
+The built-in catalog currently contains 8 source apps and 9 exact control IDs, plus 3 splash SDK IDs and 5 conditional dismiss IDs. Other cases depend on accessible ad labels and user-defined exact rules. Diagnostics can prefill a rule for review; a community subscription system is not provided. Real-world coverage and accidental-action rates have not been measured.
+
 ## References and provenance
 
 The [English source register](docs/REFERENCES.en.md) lists the complete pinned commits, source locations, and license evidence.
@@ -58,12 +63,12 @@ The [English source register](docs/REFERENCES.en.md) lists the complete pinned c
 | [zjyzip/AdClose](https://github.com/zjyzip/AdClose), [pwh-pwh/fuck_shake](https://github.com/pwh-pwh/fuck_shake) | Sensor hooks inside a target process | The limits of the Xposed approach were studied; no module was copied or integrated. |
 | Other public projects | Basic dismissal, sensor, and rule approaches | Projects without a clear license were used only to compare public facts. Their code and rules were not copied; see the source register. |
 
-Upstream licenses apply to their respective materials. A reference does not imply upstream endorsement or permission to reuse every project. This repository has not yet selected an overall open-source license for its own code.
+Upstream licenses apply to their respective materials. A reference does not imply upstream endorsement or permission to reuse every project. QingPing code is licensed under the [MIT License](LICENSE); upstream copyright and license notices are retained.
 
 ## First-time setup for every brand
 
-1. **Check the environment and install.** An Android 8.0+ environment that supports Android APKs and accessibility services is required. If QingPing is already installed, install the update with the same signature. Do not uninstall it or clear its data first.
-2. **Read and accept the disclosure.** Read the data-purpose explanation on first launch. Users who already accepted disclosure version 4 in 0.4.0 do not need to accept it again for 0.4.1.
+1. **Check the environment and install.** An Android 8.0+ environment that supports Android APKs and accessibility services is required. Future releases sharing the release certificate can update in place; old debug installations require the migration procedure above.
+2. **Read and accept the disclosure.** Read the data-purpose explanation on first launch. Disclosure version remains 4 for updates that preserve data. Uninstalling the old debug build for migration requires setup again.
 3. **Select source apps.** Enable apps individually under “应用” (Apps), then check the ad-skip option in “配置规则” (Configure rules). If an app has no launcher entry, verify its package name before adding it manually.
 4. **Enable accessibility manually.** Open system settings from QingPing and enable QingPing's service. If sideloading triggers restricted settings, verify the source and follow the device's instructions. Do not disable system protection as a whole.
 5. **Enable protection and check the connection.** Check three separate states: accessibility is enabled in the system, the service is actually connected, and global protection is on. Unlock the screen, then enter the target app again.
@@ -121,4 +126,4 @@ Toolchain: JDK 17, Gradle 8.11.1, AGP 8.10.1, and Android SDK 36. Downloading bu
 
 `scripts/verify.ps1` can use an already prepared portable toolchain to check the test apps as well. `fixture` and `fixturetarget` provide repeatable local scenarios and contain no commercial ad SDK. Main sources are under `app/src/main/java/cn/qingping/app/`.
 
-For 0.4.1, the build, 74 existing unit tests, and signature checks passed. The main app has zero Lint issues; the test apps retain 11 existing warnings. This version has not undergone physical-device or emulator interaction acceptance testing. Coverage across phone brands and power consumption have not been measured. See the [verification record, Chinese](docs/VERIFICATION.md). The supplied package is a debug build with the original signature, allowing an update that retains data. See [permissions and limitations, Chinese](docs/PERMISSIONS_AND_LIMITS.md) for release and distribution restrictions.
+Version 0.4.2 adds Android service tests, JaCoCo reporting and GitHub Actions checks. Automated checks are recorded separately from device acceptance. Real-world coverage, power consumption and accidental-action rates have not been measured. See the [verification record, Chinese](docs/VERIFICATION.md) and [release build and migration guide](docs/RELEASE_BUILD.en.md).

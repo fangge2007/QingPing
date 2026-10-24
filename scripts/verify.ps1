@@ -17,7 +17,7 @@ if (Test-Path -LiteralPath $portableGradle) {
 Push-Location -LiteralPath $projectRoot
 try {
     # C1 avoids a C2 compiler crash observed in this portable JDK during Lint.
-    & $gradleExecutable :app:assembleDebug :app:testDebugUnitTest :app:lintDebug `
+    & $gradleExecutable :app:assembleDebug :app:testDebugUnitTest :app:jacocoServiceCoverageVerification :app:lintDebug `
         :fixture:assembleDebug :fixture:lintDebug :fixturetarget:assembleDebug --no-daemon --console=plain `
         --max-workers=2 '-Dorg.gradle.jvmargs=-Xmx2048m -XX:TieredStopAtLevel=1 -Dfile.encoding=UTF-8'
     if ($LASTEXITCODE -ne 0) { throw "Verification failed with code $LASTEXITCODE" }

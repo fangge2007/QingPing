@@ -1,5 +1,8 @@
 [CmdletBinding()]
-param([string]$Destination = 'C:\ChatGPT\QingPing-publish')
+param(
+    [string]$Destination = 'C:\ChatGPT\QingPing-publish',
+    [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')][string]$Version = '0.4.2'
+)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $destinationPath = [IO.Path]::GetFullPath($Destination)
@@ -7,9 +10,9 @@ if ($destinationPath -eq $projectRoot -or $destinationPath.StartsWith($projectRo
     throw 'Use a separate directory outside the development project.'
 }
 New-Item -ItemType Directory -Force -Path $destinationPath | Out-Null
-$sourceRoots = @('app\src', 'fixture\src', 'fixturetarget\src', 'gradle', 'docs', 'examples', 'scripts')
+$sourceRoots = @('app\src', 'fixture\src', 'fixturetarget\src', 'gradle', 'docs', 'examples', 'scripts', '.github')
 $sourceFiles = @('.gitignore','build.gradle','gradle.properties','gradlew','gradlew.bat','settings.gradle',
-    'README.md','README.en.md','THIRD_PARTY_NOTICES.txt','app\build.gradle','fixture\build.gradle',
+    'README.md','README.en.md','LICENSE','THIRD_PARTY_NOTICES.txt','app\build.gradle','fixture\build.gradle',
     'fixturetarget\build.gradle','.research\sensor-evidence.json')
 $files = [Collections.Generic.List[IO.FileInfo]]::new()
 foreach ($relative in $sourceRoots) {
@@ -34,13 +37,17 @@ foreach ($ignoreRule in @('*.log', 'release-assets/')) {
         Add-Content -LiteralPath $publicIgnorePath -Value $ignoreRule
     }
 }
-$assets = Join-Path $destinationPath 'release-assets'
+$assets = Join-Path $destinationPath ('release-assets\' + $Version)
 New-Item -ItemType Directory -Force -Path $assets | Out-Null
-foreach ($name in @('qingping-0.4.1-debug.apk','qingping-test-ad.apk','qingping-test-target.apk')) {
-    Copy-Item -LiteralPath (Join-Path $projectRoot ('artifacts\' + $name)) -Destination (Join-Path $assets $name)
+foreach ($apk in @(
+    @('app\build\outputs\apk\release\app-release.apk', "qingping-$Version-release.apk"),
+    @('fixture\build\outputs\apk\debug\fixture-debug.apk', 'qingping-test-ad.apk'),
+    @('fixturetarget\build\outputs\apk\debug\fixturetarget-debug.apk', 'qingping-test-target.apk')
+)) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot $apk[0]) -Destination (Join-Path $assets $apk[1])
 }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$archivePath = Join-Path $assets 'qingping-0.4.1-source.zip'
+$archivePath = Join-Path $assets "qingping-$Version-source.zip"
 $stream = [IO.File]::Open($archivePath, [IO.FileMode]::Create)
 $zip = [IO.Compression.ZipArchive]::new($stream, [IO.Compression.ZipArchiveMode]::Create)
 try {

@@ -1,4 +1,7 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'jacoco'
+}
 
 android {
     namespace 'cn.qingping.app'
@@ -7,13 +10,71 @@ android {
         applicationId 'cn.qingping.app'
         minSdk 26
         targetSdk 36
-        versionCode 5
-        versionName '0.4.1'
+        versionCode 6
+        versionName '0.4.2'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
     lint { abortOnError true }
+    testOptions { unitTests.includeAndroidResources = true }
+    signingConfigs {
+        release {
+            if (System.getenv('QINGPING_KEYSTORE')) {
+                storeFile file(System.getenv('QINGPING_KEYSTORE'))
+                storePassword System.getenv('QINGPING_STORE_PASSWORD')
+                keyAlias System.getenv('QINGPING_KEY_ALIAS') ?: 'qingping'
+                keyPassword System.getenv('QINGPING_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            debuggable false
+            signingConfig signingConfigs.release
+        }
+    }
 }
-dependencies { testImplementation 'junit:junit:4.13.2' }
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.17'
+}
+
+tasks.register('verifyReleaseSigning') {
+    doLast {
+        ['QINGPING_KEYSTORE', 'QINGPING_STORE_PASSWORD', 'QINGPING_KEY_PASSWORD'].each {
+            if (!System.getenv(it)) throw new GradleException("Missing release signing environment variable: $it")
+        }
+    }
+}
+tasks.configureEach {
+    if (name == 'validateSigningRelease') dependsOn tasks.named('verifyReleaseSigning')
+}
+
+jacoco { toolVersion = '0.8.13' }
+tasks.withType(Test).configureEach {
+    jacoco { includeNoLocationClasses = true; excludes = ['jdk.internal.*'] }
+}
+tasks.register('jacocoTestReport', JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    executionData fileTree(layout.buildDirectory).include('jacoco/testDebugUnitTest.exec')
+    sourceDirectories.from(files('src/main/java'))
+    classDirectories.from(fileTree(layout.buildDirectory.dir('intermediates/javac/debug/compileDebugJavaWithJavac/classes')) {
+        exclude '**/R.class', '**/R$*.class', '**/BuildConfig.class'
+    })
+    reports { xml.required = true; html.required = true }
+}
+tasks.register('jacocoServiceCoverageVerification', JacocoCoverageVerification) {
+    dependsOn 'jacocoTestReport'
+    executionData.from(tasks.named('jacocoTestReport').get().executionData)
+    classDirectories.from(tasks.named('jacocoTestReport').get().classDirectories)
+    violationRules {
+        rule {
+            element = 'CLASS'
+            includes = ['cn.qingping.app.QingPingAccessibilityService']
+            limit { counter = 'LINE'; minimum = 0.60 }
+            limit { counter = 'BRANCH'; minimum = 0.30 }
+        }
+    }
+}

@@ -5,6 +5,9 @@ local.properties
 *.jks
 *.keystore
 .idea/
+.signing/
+*.p12
+signing.properties
 artifacts/
 hs_err_pid*.log
 replay_pid*.log

@@ -2,7 +2,9 @@
 
 [Back to the project](../README.en.md) · [中文](PHONE_SETUP_GUIDE.md)
 
-Applies to QingPing 0.4.1. Official documentation checked on **2026-10-23**.
+Applies to QingPing 0.4.2. Official documentation checked on **2026-10-23**.
+
+The old 0.4.1 debug APK uses a different signing certificate. Read the [export and migration guide](RELEASE_BUILD.en.md) before installing the new release APK.
 
 This guide covers different apps, phone brands, and Android systems. The brand table provides setup references, not a certified device list. These brands have not all been tested on physical devices. Regional, carrier, and OS variants may use different menus and service recovery policies.
 

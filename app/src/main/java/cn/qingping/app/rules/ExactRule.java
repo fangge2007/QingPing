@@ -137,14 +137,7 @@ public final class ExactRule {
     }
 
     public static boolean isCriticalPackage(String pkg) {
-        if (pkg == null) return true;
-        String lower = pkg.toLowerCase(Locale.ROOT);
-        return lower.equals("android") || lower.equals("cn.qingping.app")
-                || lower.equals("com.android.settings") || lower.equals("com.android.systemui")
-                || lower.equals("com.android.phone") || lower.equals("com.android.server.telecom")
-                || lower.equals("com.android.emergency") || lower.contains("permissioncontroller")
-                || lower.contains("packageinstaller") || lower.contains("launcher")
-                || lower.contains("inputmethod");
+        return cn.qingping.app.engine.PackagePolicy.isCritical(pkg);
     }
 
     private static void checkSize(String json) {

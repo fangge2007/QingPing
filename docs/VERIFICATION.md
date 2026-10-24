@@ -1,49 +1,49 @@
-# 清屏 0.4.1 验证记录
+# 清屏 0.4.2 验证记录
 
-日期：2026-10-23（Asia/Shanghai）。本轮按用户要求加入面向不同 APP、Android 系统与手机型号的通用使用教程及故障应对。没有修改识别引擎、动作策略、权限或同意版本，没有执行真机或安卓模拟器验收。
+验证日期：2026-10-24。历史记录：[0.4.1](VERIFICATION_0.4.1.md)、[0.4.0](VERIFICATION_0.4.0.md)。本页区分主机自动化与真实设备结果。
 
-## 最终验证结果
+## 已完成的本地检查
 
-最终源码执行 `scripts/verify.ps1`，`BUILD SUCCESSFUL in 40s`；122 个任务，15 个执行、107 个最新。完整本地日志为 `verification-0.4.1-final.log`。先前 0.4.0 的验证记录另存为 `VERIFICATION_0.4.0.md`。
+- Java 17、Gradle 8.11.1、AGP 8.10.1、compile/target SDK 36、min SDK 26。
+- 主应用 release 构建、两份测试夹具构建通过；主应用 debug/release Lint 均无问题。测试广告夹具保留原有 11 项 Lint 警告。
+- 96 项测试通过，0 失败、0 错误：原 74 项纯逻辑测试、2 项包名/危险动作测试、10 项 Android 服务用例在 API 28 与 35 各运行一次（20 项）。
+- 服务测试包含系统事件过滤更新/撤销、实际点击边界、锁屏与授权撤销、危险子节点、失效节点、前台变化、旧关键包名配置、完整扫描、手势授权以及跳转返回。仅 Android 系统 IPC 由 Robolectric shadow 替代。
+- JaCoCo 服务主类：行 345/505（68.32%），分支 301/834（36.09%）。整个 `QingPingAccessibilityService.java` 含内部类：行 361/538（67.10%），分支 303/846（35.82%）。未覆盖部分继续保留在报告中。
+- CI 门槛针对服务主类：行覆盖率至少 60%，分支至少 30%；本地门槛检查通过。这是回归下限，不是完备性证明。
+- `apksigner verify --verbose --print-certs` 通过 APK v2 签名校验，单一 RSA 3072 签名者。
+- `aapt dump badging` 确认包名 `cn.qingping.app`、versionCode `6`、versionName `0.4.2`，没有 `application-debuggable` 标记；release 清单也没有启用 `debuggable`（缺省为 false）。
+- 项目 LICENSE 随 APK 的 `assets/project_license.txt` 分发，上游完整 MIT 声明仍在 `assets/third_party_notices.txt`。
 
-| 项目 | 结果 |
-| --- | --- |
-| 清屏 `:app:assembleDebug` | 通过 |
-| 两个测试 APP 构建 | `:fixture:assembleDebug` / `:fixturetarget:assembleDebug` 均通过 |
-| `:app:testDebugUnitTest` | 现有 74 项全通过：决策引擎 36、控件策略 7、开屏目录 9、稳定控件身份 3、精确规则 19；失败、错误、跳过均为 0 |
-| 清屏 `:app:lintDebug` | 通过；最终 XML 中 0 问题 |
-| fixture `:fixture:lintDebug` | 通过；0 错误、11 警告，未隐藏或禁用 Lint |
-| 清屏 APK 签名 | `apksigner verify --verbose --print-certs` 通过，Signature Scheme v2 |
-| 与 0.4.0 签名一致性 | 新旧 APK 的证书 SHA-256 相同；支持原签名覆盖升级，未执行设备覆盖安装验收 |
-| APK 包及版本 | `cn.qingping.app`，versionCode=5，versionName=0.4.1；minSdk=26、targetSdk=36 |
-| 权限检查 | 仍仅声明 `RECEIVE_BOOT_COMPLETED` 与 `POST_NOTIFICATIONS`；无障碍绑定权限位于服务组件 |
-| 教程组件 | 打包清单包含 `UsageGuideActivity`，`android:exported=false` |
-| 用途同意 | 继续使用 `consent_version=4`；已完成当前同意的用户不因本次教程更新重新同意 |
-| 安卓模拟器 / 真机 | 未执行；未验证实际 UI 交互、不同品牌后台恢复、跨型号广告覆盖率或耗电 |
+正式 APK SHA-256：
 
-签名证书 SHA-256：
+```text
+050a943ca084ed7547d4d1230fe02a2d616ca240872149d5d772a93e358a1121
+```
 
-`a475dd3aa88e7a2b8bd702c5a795193574d74ad3d1ae039cb868f9117af2926a`
+发布证书 SHA-256（后续正式更新应保持此身份）：
 
-最终 APK：186562 字节，SHA-256：
+```text
+872d3f574d5498c7bc17f29b5fe18027f8e1848a495439c6d88096716071c178
+```
 
-`7dda9655896084305df790ddb975afd00415c44a10ad2cf5104e50468d292858`
+0.4.1 使用不同的调试证书，不能直接覆盖升级。请先阅读[迁移说明](RELEASE_BUILD.md)，不要把签名变更当成可保留全部数据的普通更新。
 
-fixture 的 11 条警告为 CustomSplashScreen 1、DataExtractionRules 1、MissingApplicationIcon 1、SetTextI18n 8，与上一版相同。本地 SDK 另输出无法初始化 `C:\.android` 指标目录的环境提示，不影响本次编译或 Lint 完成。
+## 可复现命令与证据
 
-## 教程与导航源码核对
+```sh
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:jacocoServiceCoverageVerification :app:lintDebug :app:processReleaseManifest :fixture:assembleDebug :fixture:lintDebug :fixturetarget:assembleDebug
+```
 
-- 用途同意前、保护首页、应用列表页和设置页均有教程入口。没有在未保存规则对话框内开启教程，避免跳转后遗留旧弹窗。
-- 17 个主题 ID 唯一；正文没有单 APP 或品牌专章。涵盖首次使用、小范围验证、升级、分身与窗口、可见按钮失效、倒计时、连续与迟到广告、视频、摇一摇、后台、诊断、规则、备份、统计、误触、隐私及限制。
-- 可离线全文搜索主题标题、摘要与正文；搜索结果自动展开，非搜索模式逐节展开/收起，正文可选择复制。展开时只更新当前卡片，不重建列表。
-- 自定义保存搜索词、展开主题与滚动位置；从系统设置回来只刷新运行状态。主界面通过 `onNewIntent` 消费并移除内部标签参数，复用主界面时仍选中对应页面，未同意时继续展示用途说明。
-- 教程只读，不自动开启保护、无障碍、APP 或手势开关。所有导航指向现有设置，没有新增截图、联网或传感器控制能力。
-- 对照当前源码核对了双重手势授权、3–30 秒规则范围、逐条持续匹配、动态倒计时精确条件失配、30 秒诊断与 2 分钟失效、本地 JSON 合并、统计误差和卸载删除等说明。
+具备私有签名环境变量后，可运行 `:app:assembleRelease :app:lintRelease`；凭据格式见[构建说明](RELEASE_BUILD.md)。源码仓库与 CI 不包含维护者发布私钥。
 
-上述为编译、静态检查与源码审查结论。既有 74 项测试覆盖纯 Java 识别与规则逻辑，不属于新增教程的 Android 交互测试。尚未在设备上验证搜索输入、大字号布局、旋转恢复、系统设置往返与返回栈。
+- CI 配置：[android.yml](../.github/workflows/android.yml)，[运行记录](https://github.com/fangge2007/QingPing/actions/workflows/android.yml)。实际云端状态以对应提交的运行结果为准。
+- 主机测试结果：`app/build/test-results/testDebugUnitTest/`。
+- HTML 测试报告：`app/build/reports/tests/testDebugUnitTest/index.html`。
+- JaCoCo 报告：`app/build/reports/jacoco/jacocoTestReport/`（HTML 与 XML）。
+- CI 报告作为 `android-check-reports` 附件保存。
 
-## 交付
+## 尚未完成
 
-运行 `scripts/package.ps1` 生成 `artifacts/qingping-0.4.1-debug.apk`、`qingping-0.4.1-source.zip` 和测试 APK，旧版本保留。APK 与已核对构建产物一致；源码 ZIP 包含两个教程类，排除工具、缓存、签名密钥和构建日志，校验值保存在 `artifacts/SHA256SUMS.txt`。
+没有本版物理手机或安卓模拟器 UI 验收；没有真实 App 版本覆盖矩阵、误触率或电量消耗实测，也没有设备端 `run-as` 检查。Robolectric 即使选择两个 API 版本，仍然是主机模拟，不等于两款手机通过验收。真实无障碍授权、厂商后台限制、窗口与手势命中、连续广告效果仍需按[设备计划](DEVICE_TEST_PLAN.md)核验。
 
-本版本是教程补充，不代表所有手机与真实 APP 已完成适配验收。历史 0.4.0 的算法修复与研究证据见归档记录；本次范围见 `RELEASE_0.4.1.md`。
+内置目录仍为 8 个来源应用和 9 个精确 ID，另有 3 个开屏 SDK ID 和 5 个条件关闭 ID。本次安全修复与测试增强不能推导出真实覆盖率增长或零误触保证。

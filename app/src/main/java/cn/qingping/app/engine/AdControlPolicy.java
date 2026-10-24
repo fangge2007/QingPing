@@ -7,6 +7,8 @@ import java.util.List;
 public final class AdControlPolicy {
     private AdControlPolicy() { }
     private static final java.util.regex.Pattern POSITIVE_COUNT = java.util.regex.Pattern.compile("[1-9][0-9]?");
+    private static final java.util.regex.Pattern UNSAFE_WORD = java.util.regex.Pattern.compile("(?:^|[^a-z])(?:dial|call|format|reset)(?:$|[^a-z])");
+    private static final java.util.regex.Pattern UNSAFE_ID_WORD = java.util.regex.Pattern.compile("(?:^|_)(?:dial|call|format|reset)(?:$|_)");
 
     /**
      * Candidate identifiers verified in MIT ganlinte/GKD-subscription@4746d192b4c57a4b62ed92a7f5deaf79e64fa811.
@@ -83,18 +85,22 @@ public final class AdControlPolicy {
         if (label.length() > 160) return true;
         String value = label.toString().toLowerCase(Locale.ROOT);
         for (String word : new String[]{"下载", "安装", "支付", "购买", "下单", "订阅", "开通", "领取", "继续观看", "打开", "了解更多",
+                "删除", "清空", "拨号", "转账", "卸载", "呼叫", "打电话", "格式化", "恢复出厂",
+                "delete", "erase", "transfer", "uninstall", "clear data", "clear all", "factory reset",
                 "download", "install", "purchase", "payment", "buy now", "subscribe", "claim reward", "watch ad", "learn more"}) {
             if (value.contains(word)) return true;
         }
-        return false;
+        return UNSAFE_WORD.matcher(value).find();
     }
 
     private static boolean unsafeId(String id) {
         String value = id.toLowerCase(Locale.ROOT);
-        for (String word : new String[]{"download", "install", "purchase", "payment", "landing", "creative", "ad_click"}) {
+        for (String word : new String[]{"download", "install", "purchase", "payment", "landing", "creative", "ad_click",
+                "delete", "erase", "transfer", "clear_data", "clear_all", "factory_reset"}) {
             if (value.contains(word)) return true;
         }
-        return value.equals("pay") || value.endsWith("_pay") || value.endsWith("_cta");
+        return value.equals("pay") || value.endsWith("_pay") || value.endsWith("_cta")
+                || UNSAFE_ID_WORD.matcher(value).find();
     }
 
     private static String resourceName(CharSequence viewId) {

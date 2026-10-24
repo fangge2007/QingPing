@@ -33,12 +33,19 @@ public final class AppStore {
         edit.apply();
     }
     public void setProtectionEnabled(boolean value) { prefs.edit().putBoolean("protection", value).apply(); }
-    public boolean isAppEnabled(String pkg) { return prefs.getBoolean("enabled." + pkg, false); }
-    public void setAppEnabled(String pkg, boolean value) { prefs.edit().putBoolean("enabled." + pkg, value).apply(); }
+    public boolean isAppEnabled(String pkg) { return !ExactRule.isCriticalPackage(pkg) && prefs.getBoolean("enabled." + pkg, false); }
+    public void setAppEnabled(String pkg, boolean value) {
+        if (value && ExactRule.isCriticalPackage(pkg)) throw new IllegalArgumentException("系统关键应用不能作为来源");
+        prefs.edit().putBoolean("enabled." + pkg, value).apply();
+    }
     public Rule getRule(String pkg) {
-        return new Rule(prefs.getBoolean("skip." + pkg, true), prefs.getString("target." + pkg, ""), prefs.getString("id." + pkg, ""));
+        String target = prefs.getString("target." + pkg, "");
+        if (ExactRule.isCriticalPackage(target)) target = "";
+        return new Rule(prefs.getBoolean("skip." + pkg, true), target, prefs.getString("id." + pkg, ""));
     }
     public void setRule(String pkg, boolean skip, String target, String id) {
+        if (ExactRule.isCriticalPackage(pkg) || !target.isEmpty() && ExactRule.isCriticalPackage(target))
+            throw new IllegalArgumentException("系统关键应用不能配置自动动作");
         prefs.edit().putBoolean("skip." + pkg, skip).putString("target." + pkg, target)
             .putString("id." + pkg, id).apply();
     }
@@ -71,7 +78,8 @@ public final class AppStore {
     public List<String> selectedPackages() {
         TreeSet<String> selected = new TreeSet<>();
         for (Map.Entry<String, ?> e : prefs.getAll().entrySet())
-            if (e.getKey().startsWith("enabled.") && Boolean.TRUE.equals(e.getValue())) selected.add(e.getKey().substring(8));
+            if (e.getKey().startsWith("enabled.") && Boolean.TRUE.equals(e.getValue())
+                    && !ExactRule.isCriticalPackage(e.getKey().substring(8))) selected.add(e.getKey().substring(8));
         return new ArrayList<>(selected);
     }
     public void setServiceConnected(boolean value) { prefs.edit().putBoolean("last_connected", value).apply(); }

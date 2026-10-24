@@ -80,6 +80,7 @@ public final class QingPingAccessibilityService extends AccessibilityService {
             semanticClicks.clear();
             engine.reset();
             if (!store.hasConsent()) RuleDiagnostics.clear();
+            updateEventPackages();
             handler.removeCallbacks(scanTask);
             scanScheduled = false;
             if (connected) schedule(0);
@@ -112,6 +113,7 @@ public final class QingPingAccessibilityService extends AccessibilityService {
         Intent homeIntent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
         ResolveInfo home = getPackageManager().resolveActivity(homeIntent, 0);
         if (home != null && home.activityInfo != null) launcherPackage = home.activityInfo.packageName;
+        updateEventPackages();
         engine.reset();
         schedule(0);
     }
@@ -193,6 +195,7 @@ public final class QingPingAccessibilityService extends AccessibilityService {
                 boolean accepted = authorized() && store.isAppEnabled(foreground.decision.sourcePackage)
                         && store.getAllowUntilElapsed() <= now
                         && store.getRule(foreground.decision.sourcePackage).guardTarget.equals(pkg)
+                        && screenUsable() && !isProtectedPackage(pkg)
                         && performGlobalAction(GLOBAL_ACTION_BACK);
                 engine.onActionResult(foreground.decision, accepted, now);
                 if (accepted) schedule(250);
@@ -250,7 +253,8 @@ public final class QingPingAccessibilityService extends AccessibilityService {
     }
 
     private boolean readyForAction(String pkg) {
-        return authorized() && store.isAppEnabled(pkg) && store.getRule(pkg).skipEnabled && screenUsable();
+        return authorized() && !isProtectedPackage(pkg) && store.isAppEnabled(pkg)
+                && store.getRule(pkg).skipEnabled && screenUsable();
     }
 
     private boolean screenUsable() {
@@ -274,6 +278,7 @@ public final class QingPingAccessibilityService extends AccessibilityService {
     }
 
     private boolean gestureClick(AccessibilityNodeInfo node, AdDecisionEngine.Decision decision, ControlIdentity expected) {
+        if (!readyForAction(decision.sourcePackage) || !store.isGestureAllowed(decision.sourcePackage)) return false;
         AccessibilityNodeInfo current = getRootInActiveWindow();
         try {
             if (current == null || current.getPackageName() == null
@@ -314,16 +319,29 @@ public final class QingPingAccessibilityService extends AccessibilityService {
     }
 
     private boolean isProtectedPackage(String pkg) {
-        String lower = pkg.toLowerCase(java.util.Locale.ROOT);
+        if (ExactRule.isCriticalPackage(pkg)) return true;
         String inputId = Settings.Secure.getString(getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
         ComponentName input = inputId == null ? null : ComponentName.unflattenFromString(inputId);
-        return pkg.equals(getPackageName()) || pkg.equals("android")
-                || pkg.equals("com.android.systemui") || pkg.equals("com.android.settings")
-                || pkg.equals("com.google.android.permissioncontroller")
-                || pkg.equals("com.android.permissioncontroller") || pkg.equals(launcherPackage)
-                || lower.contains("launcher") || lower.contains("inputmethod")
-                || lower.contains("permissioncontroller") || lower.contains("packageinstaller")
+        return pkg.equals(getPackageName()) || pkg.equals(launcherPackage)
                 || input != null && pkg.equals(input.getPackageName());
+    }
+
+    /** Never pass null or an empty array: those mean delivery from every package. */
+    private void updateEventPackages() {
+        AccessibilityServiceInfo info = getServiceInfo();
+        if (info == null || store == null) return;
+        Set<String> packages = new java.util.TreeSet<>();
+        if (store.hasConsent() && store.isProtectionEnabled()) {
+            for (String pkg : store.selectedPackages()) {
+                if (isProtectedPackage(pkg)) continue;
+                packages.add(pkg);
+                String target = store.getRule(pkg).guardTarget;
+                if (!target.isEmpty() && !isProtectedPackage(target)) packages.add(target);
+            }
+        }
+        if (packages.isEmpty()) packages.add(getPackageName());
+        info.packageNames = packages.toArray(new String[0]);
+        setServiceInfo(info);
     }
 
     private void record(AdDecisionEngine.Confirmation confirmation) {

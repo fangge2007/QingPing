@@ -385,7 +385,7 @@ public final class MainActivity extends Activity {
         add(rules, text("当前 " + store.exactRules().size() + " 条精确规则。只支持清屏格式，不直接执行 GKD 订阅或脚本。导入会先展示内容，确认后按 key 合并；仍需逐 APP 开启。", 14, MUTED), 10);
         add(rules, button("导入规则 JSON", this::importRules), 8);
         add(rules, button("导出规则 JSON", this::exportRules), 6);
-        add(page, text("清屏 0.4.1  ·  Android 8.0+\n无 Root 版本：辅助关闭与跳转返回，不能禁用其他 APP 的摇一摇传感器。", 12, MUTED), 22);
+        add(page, text("清屏 0.4.2  ·  Android 8.0+\n无 Root 版本：辅助关闭与跳转返回，不能禁用其他 APP 的摇一摇传感器。", 12, MUTED), 22);
     }
     private boolean accessibilityEnabled() {
         AccessibilityManager manager = getSystemService(AccessibilityManager.class);
@@ -460,8 +460,7 @@ public final class MainActivity extends Activity {
         catch (PackageManager.NameNotFoundException ex) { return pkg; }
     }
     private boolean criticalPackage(String p) {
-        return p.equals(getPackageName()) || p.equals("android") || p.equals("com.android.settings") || p.equals("com.android.systemui")
-            || p.contains("permissioncontroller") || p.contains("packageinstaller") || p.contains("launcher") || p.contains("inputmethod");
+        return cn.qingping.app.engine.PackagePolicy.isCritical(p) || p.equals(getPackageName());
     }
     private static boolean validPackage(String p) { return p.matches("[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+"); }
     private static final class AppEntry {
